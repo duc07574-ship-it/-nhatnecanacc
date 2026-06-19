@@ -1,0 +1,312 @@
+-- [[ CUSTOM UI WITH FIXED KEY SYSTEM BY @nhatnecanacc ]]
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+-- CẤU HÌNH KEY
+local CORRECT_KEY = "FREEGROWAGARDEN2" 
+
+local LocalPlayer = Players.LocalPlayer
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "nhatnecanacc_GUI"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Hàm Animation mượt
+local function animate(obj, properties, duration)
+    local tween = TweenService:Create(obj, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), properties)
+    tween:Play()
+    return tween
+end
+
+-- Hàm di chuyển UI (Chống lỗi vị trí trên Mobile/PC)
+local function makeDraggable(guiObject)
+    local dragging, dragInput, dragStart, startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    guiObject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = guiObject.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    guiObject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then update(input) end
+    end)
+end
+
+-- ==========================================
+-- MENU CHÍNH (BẮT ĐẦU Ở TRẠNG THÁI ẨN)
+-- ==========================================
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 400, 0, 400)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BackgroundTransparency = 0.2
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Visible = false
+makeDraggable(MainFrame)
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
+local Stroke = Instance.new("UIStroke", MainFrame)
+Stroke.Color = Color3.fromRGB(85, 170, 255)
+Stroke.Thickness = 2
+Stroke.Transparency = 0.3
+
+-- Tên UI với hiệu ứng Gradient chạy
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.BackgroundTransparency = 1
+Title.Text = "@nhatnecanacc"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 22
+Title.Font = Enum.Font.GothamBold
+
+local TextGradient = Instance.new("UIGradient", Title)
+TextGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 4)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 242)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 4))
+})
+
+coroutine.wrap(function()
+    while true do
+        for i = 0, 1, 0.005 do
+            TextGradient.Offset = Vector2.new(i, 0)
+            task.wait(0.01)
+        end
+    end
+end)()
+
+-- Ghi chú thông tin tài khoản
+local NoteFrame = Instance.new("Frame", MainFrame)
+NoteFrame.Size = UDim2.new(0, 360, 0, 120)
+NoteFrame.Position = UDim2.new(0.5, 0, 0, 130)
+NoteFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+NoteFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+NoteFrame.BackgroundTransparency = 0.4
+Instance.new("UICorner", NoteFrame).CornerRadius = UDim.new(0, 10)
+
+local NoteText = Instance.new("TextLabel", NoteFrame)
+NoteText.Size = UDim2.new(1, -20, 1, -20)
+NoteText.Position = UDim2.new(0.5, 0, 0.5, 0)
+NoteText.AnchorPoint = Vector2.new(0.5, 0.5)
+NoteText.BackgroundTransparency = 1
+NoteText.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoteText.TextSize = 14
+NoteText.Font = Enum.Font.GothamBold
+NoteText.TextXAlignment = Enum.TextXAlignment.Left
+
+task.spawn(function()
+    while true do
+        local currentTime = os.date("%d/%m/%Y - %X")
+        NoteText.Text = "📌 THÔNG TIN:\n• Script: @nhatnecanacc\n• Người dùng: " .. LocalPlayer.Name .. "\n• Thời gian: " .. currentTime
+        task.wait(1)
+    end
+end)
+
+-- KHUNG CUỘN chứa nút bấm chọn Script
+local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
+ScrollFrame.Name = "ButtonContainer"
+ScrollFrame.Size = UDim2.new(0, 380, 0, 180)
+ScrollFrame.Position = UDim2.new(0.5, 0, 0, 290)
+ScrollFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.BorderSizePixel = 0
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 380)
+ScrollFrame.ScrollBarThickness = 4
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(85, 170, 255)
+
+local UIListLayout = Instance.new("UIListLayout", ScrollFrame)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10)
+
+local function createButton(name, layoutOrder, callback)
+    local btn = Instance.new("TextButton", ScrollFrame)
+    btn.Size = UDim2.new(0, 350, 0, 50)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.LayoutOrder = layoutOrder
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    btn.MouseButton1Click:Connect(function()
+        animate(btn, {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}, 0.1)
+        task.wait(0.1)
+        animate(btn, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}, 0.1)
+        callback()
+    end)
+    return btn
+end
+
+-- Tải các nút Script của bạn
+createButton("Teddy-nokey", 1, function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Teddyseetink/Haidepzai/refs/heads/main/main.lua"))() end)
+createButton("Colahub-nokey", 2, function() loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/a163e221ed1848bb88f2fe4098da6c82.lua"))() end)
+createButton("luminon-nokey", 3, function() loadstring(game:HttpGet("http://luminon.top/loader.lua"))() end)
+createButton("Bluex-nokey", 4, function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Dev-BlueX/BlueX-Hub/refs/heads/main/Main.lua"))() end)
+createButton("speedhub-key", 5, function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))() end)
+createButton("wishubx-nokey", 6, function() loadstring(game:HttpGet("https://api.wishub.cloud/files/loaders/dedcf9be947d43b8ae065ad21200c764.lua"))() end)
+
+-- Nút ẩn hiện UI (Toggle Button)
+local ToggleButton = Instance.new("ImageButton", ScreenGui)
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0, 20, 0, 100)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ToggleButton.Image = "rbxassetid://6031094678"
+ToggleButton.Visible = false
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+local ToggleStroke = Instance.new("UIStroke", ToggleButton)
+ToggleStroke.Color = Color3.fromRGB(85, 170, 255)
+ToggleStroke.Thickness = 1.5
+makeDraggable(ToggleButton)
+
+local menuOpen = true
+local isTweening = false
+ToggleButton.MouseButton1Click:Connect(function()
+    if isTweening then return end
+    isTweening = true
+    if menuOpen then
+        local tween = animate(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.4)
+        tween.Completed:Wait()
+        MainFrame.Visible = false
+    else
+        MainFrame.Visible = true
+        local tween = animate(MainFrame, {Size = UDim2.new(0, 400, 0, 400)}, 0.4)
+        tween.Completed:Wait()
+    end
+    menuOpen = not menuOpen
+    isTweening = false
+end)
+
+-- ==========================================
+-- GIAO DIỆN NHẬP KEY 
+-- ==========================================
+local KeyFrame = Instance.new("Frame", ScreenGui)
+KeyFrame.Name = "KeyFrame"
+KeyFrame.Size = UDim2.new(0, 350, 0, 230)
+KeyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+KeyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+KeyFrame.BorderSizePixel = 0
+KeyFrame.ClipsDescendants = true
+KeyFrame.ZIndex = 10
+makeDraggable(KeyFrame)
+
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 15)
+local KeyStroke = Instance.new("UIStroke", KeyFrame)
+KeyStroke.Color = Color3.fromRGB(85, 170, 255)
+KeyStroke.Thickness = 2
+
+local KeyTitle = Instance.new("TextLabel", KeyFrame)
+KeyTitle.Size = UDim2.new(1, 0, 0, 50)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Text = "🔑 @nhatnecanacc KEY SYSTEM"
+KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyTitle.TextSize = 16
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.ZIndex = 11
+
+local KeyInput = Instance.new("TextBox", KeyFrame)
+KeyInput.Size = UDim2.new(0, 290, 0, 45)
+KeyInput.Position = UDim2.new(0.5, 0, 0, 75)
+KeyInput.AnchorPoint = Vector2.new(0.5, 0)
+KeyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+KeyInput.Text = ""
+KeyInput.PlaceholderText = "Nhập mã Key tại đây..."
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.TextSize = 14
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.ZIndex = 11
+Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 8)
+
+-- KHUNG CHỨA NÚT TỰ ĐỘNG CHIA KHOẢNG CÁCH (CHỐNG DÍNH NÚT)
+local ButtonBar = Instance.new("Frame", KeyFrame)
+ButtonBar.Size = UDim2.new(0, 290, 0, 40)
+ButtonBar.Position = UDim2.new(0.5, 0, 0, 150)
+ButtonBar.AnchorPoint = Vector2.new(0.5, 0)
+ButtonBar.BackgroundTransparency = 1
+ButtonBar.ZIndex = 11
+
+local BarLayout = Instance.new("UIListLayout", ButtonBar)
+BarLayout.FillDirection = Enum.FillDirection.Horizontal
+BarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+BarLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+BarLayout.Padding = UDim.new(0, 20)
+
+local CheckButton = Instance.new("TextButton", ButtonBar)
+CheckButton.Size = UDim2.new(0, 135, 1, 0)
+CheckButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+CheckButton.Text = "Kiểm Tra"
+CheckButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CheckButton.Font = Enum.Font.GothamBold
+CheckButton.TextSize = 14
+CheckButton.ZIndex = 12
+Instance.new("UICorner", CheckButton).CornerRadius = UDim.new(0, 6)
+
+local GetKeyBtn = Instance.new("TextButton", ButtonBar)
+GetKeyBtn.Size = UDim2.new(0, 135, 1, 0)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(85, 85, 127)
+GetKeyBtn.Text = "Get Key"
+GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.TextSize = 14
+GetKeyBtn.ZIndex = 12
+Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
+
+-- SỰ KIỆN GET KEY (LINK4SUB ĐÃ ĐƯỢC CẬP NHẬT)
+GetKeyBtn.MouseButton1Click:Connect(function()
+    setclipboard("https://link4sub.com/FC95DU6h0D") 
+    GetKeyBtn.Text = "Đã copy link!"
+    task.wait(1.5)
+    GetKeyBtn.Text = "Get Key"
+end)
+
+-- Xử lý nút kiểm tra và hiệu ứng Lắc (Shake) khi sai Key
+local verifying = false
+CheckButton.MouseButton1Click:Connect(function()
+    if verifying then return end
+    verifying = true
+    
+    if KeyInput.Text == CORRECT_KEY then
+        CheckButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        CheckButton.Text = "Chính Xác!"
+        
+        local closing = animate(KeyFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.4)
+        closing.Completed:Wait()
+        
+        KeyFrame:Destroy()
+        MainFrame.Visible = true
+        ToggleButton.Visible = true
+    else
+        CheckButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        CheckButton.Text = "Sai Key!"
+        KeyInput.Text = ""
+        
+        for i = 1, 2 do
+            animate(KeyFrame, {Position = UDim2.new(0.51, 0, 0.5, 0)}, 0.05).Completed:Wait()
+            animate(KeyFrame, {Position = UDim2.new(0.49, 0, 0.5, 0)}, 0.05).Completed:Wait()
+        end
+        animate(KeyFrame, {Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.05)
+        
+        task.wait(0.5)
+        CheckButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+        CheckButton.Text = "Kiểm Tra"
+    end
+    verifying = false
+end)
+
